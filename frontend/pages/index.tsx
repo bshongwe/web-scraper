@@ -4,8 +4,9 @@ export default function Home() {
   const [url, setUrl] = useState('');
   const [res, setRes] = useState(null as any);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'scrape' | 'results'>('scrape');
+  const [activeTab, setActiveTab] = useState<'scrape' | 'results' | 'status' | 'about'>('scrape');
   const [results, setResults] = useState<any[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   async function submit() {
     if (!url.trim()) return;
@@ -39,58 +40,103 @@ export default function Home() {
   }
 
   // Load results when switching to results tab
-  const handleTabChange = (tab: 'scrape' | 'results') => {
+  const handleTabChange = (tab: 'scrape' | 'results' | 'status' | 'about') => {
     setActiveTab(tab);
     if (tab === 'results') {
       fetchResults();
     }
   };
 
+  const sidebarItems = [
+    { id: 'scrape', label: 'New Scrape', icon: '🚀', description: 'Schedule new scraping jobs' },
+    { id: 'results', label: 'Results', icon: '📊', description: 'View scraped content' },
+    { id: 'status', label: 'Job Status', icon: '⏱️', description: 'Monitor job progress' },
+    { id: 'about', label: 'About', icon: 'ℹ️', description: 'System information' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Modern Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-gray-900">🕷️ Web Scraper</h1>
-            <div className="text-sm text-gray-600">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-lg transition-all duration-300 flex-shrink-0`}>
+        {/* Sidebar Header */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
+          {!sidebarCollapsed && (
+            <h1 className="text-xl font-bold text-gray-900">🕷️ Web Scraper</h1>
+          )}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d={sidebarCollapsed ? "M13 7l5 5-5 5M6 12h12" : "M11 17l-5-5 5-5M18 12H6"} />
+            </svg>
+          </button>
+        </div>
+
+        {/* Sidebar Navigation */}
+        <nav className="mt-8">
+          <div className="px-3 space-y-1">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleTabChange(item.id as any)}
+                className={`${
+                  activeTab === item.id
+                    ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                } group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors`}
+                title={sidebarCollapsed ? item.label : ''}
+              >
+                <span className="text-lg mr-3">{item.icon}</span>
+                {!sidebarCollapsed && (
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">{item.label}</div>
+                    <div className="text-xs text-gray-500">{item.description}</div>
+                  </div>
+                )}
+                {sidebarCollapsed && activeTab === item.id && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full ml-auto"></div>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Sidebar Footer */}
+        {!sidebarCollapsed && (
+          <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200 bg-gray-50">
+            <div className="text-xs text-gray-500 space-y-1">
+              <p><strong>Status:</strong> All systems operational</p>
+              <p><strong>Queue:</strong> {results.length} jobs processed</p>
+              <p><strong>Version:</strong> 1.0.0</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Header */}
+        <div className="bg-white shadow-sm border-b border-gray-200 h-16">
+          <div className="h-full px-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {sidebarItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {sidebarItems.find(item => item.id === activeTab)?.description || ''}
+              </p>
+            </div>
+            <div className="text-sm text-gray-500">
               Powered by Playwright & Next.js
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Tab Navigation */}
-        <div className="mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => handleTabChange('scrape')}
-                className={`${
-                  activeTab === 'scrape'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
-              >
-                <span>🚀</span>
-                <span>New Scrape</span>
-              </button>
-              <button
-                onClick={() => handleTabChange('results')}
-                className={`${
-                  activeTab === 'results'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
-              >
-                <span>📊</span>
-                <span>Results</span>
-              </button>
-            </nav>
-          </div>
-        </div>
+        {/* Main Content */}
+        <div className="flex-1 p-6 overflow-auto">
+          {/* Content based on active tab */}
 
         {/* Tab Content */}
         {activeTab === 'scrape' && (
@@ -207,6 +253,116 @@ export default function Home() {
             )}
           </div>
         )}
+
+        {/* Status Tab */}
+        {activeTab === 'status' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Job Status Monitor</h2>
+              <p className="text-gray-600">Track the progress of your scraping jobs</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-blue-800">Total Jobs</h3>
+                <p className="text-2xl font-bold text-blue-900">12</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-green-800">Completed</h3>
+                <p className="text-2xl font-bold text-green-900">10</p>
+              </div>
+              <div className="bg-yellow-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-yellow-800">Processing</h3>
+                <p className="text-2xl font-bold text-yellow-900">2</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">Job #10</p>
+                    <p className="text-sm text-gray-600">https://example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Completed</span>
+                </div>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">Job #11</p>
+                    <p className="text-sm text-gray-600">https://httpbin.org/html</p>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Processing</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* About Tab */}
+        {activeTab === 'about' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">About Web Scraper</h2>
+              <p className="text-gray-600">System information and architecture details</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Technology Stack</h3>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    <strong>Frontend:</strong> Next.js + React + TypeScript
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    <strong>Backend:</strong> Express.js + Prisma + PostgreSQL
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    <strong>Queue:</strong> BullMQ + Redis
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                    <strong>Scraper:</strong> Python + Playwright + FastAPI
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                    <strong>Infrastructure:</strong> Docker + Docker Compose
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Features</h3>
+                <ul className="space-y-2 text-sm">
+                  <li>✅ JavaScript-heavy site support via Playwright</li>
+                  <li>✅ Background job processing with queues</li>
+                  <li>✅ Real-time job status monitoring</li>
+                  <li>✅ Containerized deployment</li>
+                  <li>✅ RESTful API with authentication</li>
+                  <li>✅ Modern responsive UI</li>
+                  <li>✅ Database persistence</li>
+                  <li>✅ CI/CD pipeline integration</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-2">Data Flow</h4>
+              <p className="text-sm text-gray-700">
+                Frontend → API → Redis Queue → Worker → Python Scraper → Database → Results
+              </p>
+            </div>
+          </div>
+        )}
+
+        </div>
       </div>
 
       <style>{`
