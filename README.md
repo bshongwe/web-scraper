@@ -11,7 +11,7 @@ This is a complete fullstack web scraper application that includes **everything*
 - **Database**: PostgreSQL with Prisma ORM
 - **Queue**: Redis for job queuing
 - **Docker**: Complete containerization with docker-compose
-- **CI/CD**: GitHub Actions workflow skeleton
+- **CI/CD**: Complete GitHub Actions pipeline with security scanning, testing, and deployments
 
 ## Quickstart
 
@@ -72,7 +72,12 @@ web-scraper/
 │     └─ index.tsx         # Main page
 
 ├─ docker-compose.yml      # Complete stack orchestration
-├─ .github/workflows/ci.yml # CI pipeline
+├─ .github/workflows/      # Complete CI/CD pipeline
+│  ├─ ci.yml              # Main CI/CD workflow
+│  ├─ security.yml        # Security auditing
+│  ├─ performance.yml     # Performance testing
+│  ├─ deployment.yml      # Production deployment
+│  └─ README.md           # Workflow documentation
 └─ README.md
 ```
 
