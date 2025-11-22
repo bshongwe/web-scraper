@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import Button from '../components/ui/Button';
+import Card, { CardHeader, CardContent } from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import { useTheme } from '../components/ThemeProvider';
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -7,6 +11,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'scrape' | 'results' | 'status' | 'about'>('scrape');
   const [results, setResults] = useState<any[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   async function submit() {
     if (!url.trim()) return;
@@ -55,17 +60,17 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex">
       {/* Sidebar */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-lg transition-all duration-300 flex-shrink-0`}>
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex-shrink-0`}>
         {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
           {!sidebarCollapsed && (
-            <h1 className="text-xl font-bold text-gray-900">🕷️ Web Scraper</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">🕷️ Web Scraper</h1>
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -83,16 +88,16 @@ export default function Home() {
                 onClick={() => handleTabChange(item.id as any)}
                 className={`${
                   activeTab === item.id
-                    ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                } group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors`}
+                    ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/50 text-blue-700 dark:text-blue-300 border-r-2 border-blue-500 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
+                } group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:shadow-sm`}
                 title={sidebarCollapsed ? item.label : ''}
               >
                 <span className="text-lg mr-3">{item.icon}</span>
                 {!sidebarCollapsed && (
                   <div className="flex-1 text-left">
                     <div className="font-medium">{item.label}</div>
-                    <div className="text-xs text-gray-500">{item.description}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{item.description}</div>
                   </div>
                 )}
                 {sidebarCollapsed && activeTab === item.id && (
@@ -105,8 +110,17 @@ export default function Home() {
 
         {/* Sidebar Footer */}
         {!sidebarCollapsed && (
-          <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200 bg-gray-50">
-            <div className="text-xs text-gray-500 space-y-1">
+          <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
               <p><strong>Status:</strong> All systems operational</p>
               <p><strong>Queue:</strong> {results.length} jobs processed</p>
               <p><strong>Version:</strong> 1.0.0</p>
@@ -118,48 +132,50 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Top Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 h-16">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 h-16">
           <div className="h-full px-6 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {sidebarItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {sidebarItems.find(item => item.id === activeTab)?.description || ''}
               </p>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               Powered by Playwright & Next.js
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto fade-in">
           {/* Content based on active tab */}
 
         {/* Tab Content */}
         {activeTab === 'scrape' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Schedule Scraping Job</h2>
-              <p className="text-gray-600">Enter a URL to scrape web content</p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-                  Website URL
-                </label>
-                <input
-                  id="url"
-                  value={url}
-                  onChange={e => setUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                  onKeyDown={(e) => e.key === 'Enter' && submit()}
-                />
+          <Card className="shadow-lg">
+            <CardContent className="py-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Schedule Scraping Job</h2>
+                <p className="text-gray-600">Enter a URL to scrape web content</p>
               </div>
+
+              <div className="space-y-6">
+              <Input
+                id="url"
+                label="Website URL"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                placeholder="https://example.com"
+                className="text-lg"
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+                icon={
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                }
+              />
 
               {/* Quick Examples */}
               <div>
@@ -177,50 +193,47 @@ export default function Home() {
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={submit}
                 disabled={loading || !url.trim()}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                loading={loading}
+                size="lg"
+                className="w-full"
               >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Scheduling Job...
-                  </>
-                ) : (
-                  'Schedule Scraping Job'
-                )}
-              </button>
-            </div>
-
-            {/* Result Display */}
-            {res && (
-              <div className={`mt-6 p-4 rounded-md ${res.error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                <h3 className={`text-sm font-medium ${res.error ? 'text-red-800' : 'text-green-800'}`}>
-                  {res.error ? 'Error' : 'Success!'}
-                </h3>
-                <pre className={`mt-2 text-sm ${res.error ? 'text-red-700' : 'text-green-700'}`}>
-                  {JSON.stringify(res, null, 2)}
-                </pre>
+                {loading ? 'Scheduling Job...' : 'Schedule Scraping Job'}
+              </Button>
               </div>
-            )}
-          </div>
+
+              {/* Result Display */}
+              {res && (
+                <div className={`mt-6 p-4 rounded-md ${res.error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                  <h3 className={`text-sm font-medium ${res.error ? 'text-red-800' : 'text-green-800'}`}>
+                    {res.error ? 'Error' : 'Success!'}
+                  </h3>
+                  <pre className={`mt-2 text-sm ${res.error ? 'text-red-700' : 'text-green-700'}`}>
+                    {JSON.stringify(res, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {activeTab === 'results' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Scraping Results</h2>
-                <p className="text-gray-600">{results.length} total results</p>
+          <Card className="shadow-lg">
+            <CardContent className="py-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Scraping Results</h2>
+                  <p className="text-gray-600">{results.length} total results</p>
+                </div>
+                <Button onClick={fetchResults} variant="primary">
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </Button>
               </div>
-              <button
-                onClick={fetchResults}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Refresh
-              </button>
-            </div>
 
             {results.length === 0 ? (
               <div className="text-center py-12">
@@ -229,7 +242,7 @@ export default function Home() {
             ) : (
               <div className="space-y-4">
                 {results.map((result: any) => (
-                  <div key={result.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={result.id} className="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 hover:shadow-md hover:border-gray-300 transition-all duration-200 bg-white">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-medium text-gray-900">{result.url}</h3>
                       <span className="text-xs text-gray-500">
@@ -251,16 +264,18 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Status Tab */}
         {activeTab === 'status' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Job Status Monitor</h2>
-              <p className="text-gray-600">Track the progress of your scraping jobs</p>
-            </div>
+          <Card className="shadow-lg">
+            <CardContent className="py-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Job Status Monitor</h2>
+                <p className="text-gray-600">Track the progress of your scraping jobs</p>
+              </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="bg-blue-50 rounded-lg p-4">
@@ -300,16 +315,18 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* About Tab */}
         {activeTab === 'about' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">About Web Scraper</h2>
-              <p className="text-gray-600">System information and architecture details</p>
-            </div>
+          <Card className="shadow-lg">
+            <CardContent className="py-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">About Web Scraper</h2>
+                <p className="text-gray-600">System information and architecture details</p>
+              </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -359,7 +376,8 @@ export default function Home() {
                 Frontend → API → Redis Queue → Worker → Python Scraper → Database → Results
               </p>
             </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         </div>
