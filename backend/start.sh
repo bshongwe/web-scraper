@@ -8,8 +8,8 @@ until nc -z postgres 5432; do
 done
 echo "Database is ready!"
 
-echo "Running database migrations..."
-npx prisma migrate deploy
+echo "Setting up database schema..."
+npx prisma db push --accept-data-loss
 
 echo "Starting API server..."
 node dist/index.js
