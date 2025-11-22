@@ -223,8 +223,8 @@ jobs:
       
       - name: Build and start services
         run: |
-          docker-compose -f docker-compose.yml build
-          docker-compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml up -d
           sleep 30
       
       - name: Wait for services to be ready
@@ -241,15 +241,15 @@ jobs:
         if: failure()
         run: |
           echo "=== API Logs ==="
-          docker-compose logs api
+          docker compose logs api
           echo "=== Worker Logs ==="
-          docker-compose logs worker
+          docker compose logs worker
           echo "=== Scraper Logs ==="
-          docker-compose logs scraper
+          docker compose logs scraper
       
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
 
   # Build and Push Docker Images (only on main branch)
   build-and-push:
