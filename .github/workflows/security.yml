@@ -1,0 +1,96 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  dependency-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, worker, frontend, scraper]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js (for Node.js components)
+        if: matrix.component != 'scraper'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Python (for scraper)
+        if: matrix.component == 'scraper'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Poetry (for scraper)
+        if: matrix.component == 'scraper'
+        uses: snok/install-poetry@v1
+      
+      - name: Audit Node.js dependencies
+        if: matrix.component != 'scraper'
+        run: |
+          cd ${{ matrix.component }}
+          npm audit --audit-level=moderate
+          npm audit fix --dry-run
+      
+      - name: Audit Python dependencies
+        if: matrix.component == 'scraper'
+        run: |
+          cd scraper
+          poetry audit || echo "Poetry audit not available"
+          poetry show --outdated
+      
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        if: matrix.component != 'scraper'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=${{ matrix.component }}/package.json
+        continue-on-error: true
+
+  docker-security:
+    name: Docker Image Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: docker-compose build
+      
+      - name: Run Trivy on Docker images
+        run: |
+          for image in api worker scraper frontend; do
+            echo "Scanning web-scraper-$image image..."
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $HOME/Library/Caches:/root/.cache/ \
+              aquasec/trivy:latest image --exit-code 1 --severity HIGH,CRITICAL \
+              web-scraper-$image:latest || true
+          done
+
+  infrastructure-scan:
+    name: Infrastructure Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Checkov on Docker Compose
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,docker_compose
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+        continue-on-error: true
+      
+      - name: Upload Checkov scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
