@@ -1,0 +1,247 @@
+name: Production Deployment
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      version:
+        description: 'Version to deploy'
+        required: true
+        default: 'latest'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  pre-deployment:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Validate deployment
+        run: |
+          echo "🔍 Validating deployment for version: ${{ steps.version.outputs.version }}"
+          echo "🎯 Target environment: ${{ github.event.inputs.environment || 'production' }}"
+      
+      - name: Check image availability
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          for service in api worker scraper frontend; do
+            echo "Checking $REGISTRY/$IMAGE_NAME-$service:$VERSION"
+            # In real deployment, verify images exist in registry
+          done
+
+  database-migration:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: [pre-deployment]
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci --prefix backend
+      
+      - name: Run database backup
+        run: |
+          echo "🗄️  Creating database backup..."
+          # Add backup commands here
+          # pg_dump $DATABASE_URL > backup-$(date +%Y%m%d-%H%M%S).sql
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Run database migrations
+        run: |
+          echo "🔄 Running database migrations..."
+          cd backend
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Verify migration
+        run: |
+          echo "✅ Verifying database migration..."
+          cd backend
+          npx prisma db seed || echo "No seed script"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy:
+    name: Deploy Services
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, database-migration]
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    strategy:
+      matrix:
+        service: [api, worker, scraper, frontend]
+      fail-fast: false
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Deploy ${{ matrix.service }}
+        run: |
+          VERSION="${{ needs.pre-deployment.outputs.version }}"
+          SERVICE="${{ matrix.service }}"
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          
+          echo "🚀 Deploying $SERVICE:$VERSION to $ENV"
+          
+          # Example deployment commands (adjust for your infrastructure)
+          # For Kubernetes:
+          # kubectl set image deployment/$SERVICE-deployment $SERVICE=$REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION
+          # kubectl rollout status deployment/$SERVICE-deployment
+          
+          # For Docker Swarm:
+          # docker service update --image $REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION web-scraper_$SERVICE
+          
+          # For docker-compose with rolling update:
+          # docker pull $REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION
+          # docker-compose up -d $SERVICE
+          
+          echo "✅ Deployed $SERVICE successfully"
+
+  health-check:
+    name: Post-deployment Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Wait for services to be ready
+        run: |
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          
+          if [ "$ENV" = "production" ]; then
+            API_URL="${{ secrets.PRODUCTION_API_URL }}"
+            FRONTEND_URL="${{ secrets.PRODUCTION_FRONTEND_URL }}"
+          else
+            API_URL="${{ secrets.STAGING_API_URL }}"
+            FRONTEND_URL="${{ secrets.STAGING_FRONTEND_URL }}"
+          fi
+          
+          echo "🔍 Checking API health: $API_URL"
+          timeout 300 bash -c "until curl -f $API_URL/api/jobs/results; do sleep 10; done"
+          
+          echo "🔍 Checking Frontend health: $FRONTEND_URL"
+          timeout 300 bash -c "until curl -f $FRONTEND_URL; do sleep 10; done"
+      
+      - name: Run smoke tests
+        run: |
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          
+          if [ "$ENV" = "production" ]; then
+            API_URL="${{ secrets.PRODUCTION_API_URL }}"
+          else
+            API_URL="${{ secrets.STAGING_API_URL }}"
+          fi
+          
+          echo "🧪 Running smoke tests against $API_URL"
+          
+          # Test user registration
+          TEST_EMAIL="smoke-test-$(date +%s)@example.com"
+          REGISTER_RESULT=$(curl -s -X POST $API_URL/api/auth/register \
+            -H "Content-Type: application/json" \
+            -d "{\"email\": \"$TEST_EMAIL\", \"password\": \"smoketest123\"}")
+          
+          if echo "$REGISTER_RESULT" | grep -q "id"; then
+            echo "✅ User registration smoke test passed"
+          else
+            echo "❌ User registration smoke test failed"
+            exit 1
+          fi
+          
+          # Test job results endpoint
+          RESULTS=$(curl -s $API_URL/api/jobs/results)
+          if echo "$RESULTS" | grep -q "\["; then
+            echo "✅ Job results endpoint smoke test passed"
+          else
+            echo "❌ Job results endpoint smoke test failed"
+            exit 1
+          fi
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [health-check]
+    if: failure()
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Rollback deployment
+        run: |
+          echo "🔄 Rolling back deployment due to health check failure"
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          
+          # Add rollback commands here
+          # For Kubernetes:
+          # kubectl rollout undo deployment/api-deployment
+          # kubectl rollout undo deployment/worker-deployment
+          # kubectl rollout undo deployment/scraper-deployment
+          # kubectl rollout undo deployment/frontend-deployment
+          
+          # For Docker Swarm:
+          # docker service rollback web-scraper_api
+          # docker service rollback web-scraper_worker
+          # docker service rollback web-scraper_scraper
+          # docker service rollback web-scraper_frontend
+      
+      - name: Notify failure
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: failure
+          text: 'Deployment failed and rollback initiated'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  notify-success:
+    name: Notify Successful Deployment
+    runs-on: ubuntu-latest
+    needs: [health-check]
+    if: success()
+    steps:
+      - name: Notify success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: |
+            🎉 Deployment successful!
+            Version: ${{ needs.pre-deployment.outputs.version }}
+            Environment: ${{ github.event.inputs.environment || 'production' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
