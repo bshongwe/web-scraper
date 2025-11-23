@@ -75,4 +75,4 @@ echo "   API: http://localhost:4000"
 echo "   Prisma Studio: http://localhost:5555 (run: docker exec web-scraper-api-1 npx prisma studio)"
 echo ""
 echo "🐳 Container Status:"
-docker-compose ps
+docker compose ps
