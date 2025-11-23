@@ -62,9 +62,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER || 'testuser' }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD || 'testpass' }}
-          POSTGRES_DB: ${{ secrets.DB_NAME || 'scraper_test' }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
@@ -97,7 +97,7 @@ jobs:
           cd backend
           npx prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://testuser:testpass@localhost:5432/scraper_test' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       
       - name: Verify migration
         run: |
@@ -105,7 +105,7 @@ jobs:
           cd backend
           npx prisma db seed || echo "No seed script"
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://testuser:testpass@localhost:5432/scraper_test' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   deploy:
     name: Deploy Services
