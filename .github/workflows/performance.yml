@@ -51,7 +51,7 @@ jobs:
       
       - name: Start application
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 30
           timeout 60 bash -c 'until curl -f http://localhost:4000/api/jobs/results; do sleep 2; done'
       
@@ -112,11 +112,11 @@ jobs:
         if: failure()
         run: |
           echo "=== API Logs ==="
-          docker-compose logs api
+          docker compose logs api
       
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
 
   load-test:
     name: Load Testing
@@ -126,7 +126,7 @@ jobs:
       
       - name: Setup application
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 30
       
       - name: Install Artillery
@@ -165,4 +165,4 @@ jobs:
       
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
