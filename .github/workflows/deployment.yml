@@ -58,6 +58,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre-deployment]
     environment: ${{ github.event.inputs.environment || 'production' }}
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER || 'testuser' }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD || 'testpass' }}
+          POSTGRES_DB: ${{ secrets.DB_NAME || 'scraper_test' }}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       
@@ -71,9 +84,10 @@ jobs:
       
       - name: Run database backup
         run: |
-          echo "🗄️  Creating database backup..."
+          echo "🗜️  Creating database backup..."
           # Add backup commands here
           # pg_dump $DATABASE_URL > backup-$(date +%Y%m%d-%H%M%S).sql
+          echo "Backup step completed (placeholder)"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
       
