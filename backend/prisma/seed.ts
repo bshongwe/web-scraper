@@ -34,15 +34,26 @@ async function main() {
     data: [
       {
         url: 'https://example.com',
-        content: '<html><head><title>Example Domain</title></head><body><h1>Example Domain</h1><p>This domain is for use in illustrative examples in documents.</p></body></html>',
+        content:
+          '<html><head><title>Example Domain</title></head>' +
+          '<body><h1>Example Domain</h1>' +
+          '<p>This domain is for use in illustrative examples ' +
+          'in documents.</p></body></html>',
       },
       {
         url: 'https://httpbin.org/html',
-        content: '<html><head><title>Herman Melville - Moby-Dick</title></head><body><h1>Moby-Dick</h1><p>Call me Ishmael. Some years ago...</p></body></html>',
+        content:
+          '<html><head><title>Herman Melville - Moby-Dick</title>' +
+          '</head><body><h1>Moby-Dick</h1>' +
+          '<p>Call me Ishmael. Some years ago...</p></body></html>',
       },
       {
         url: 'https://jsonplaceholder.typicode.com/',
-        content: '<html><head><title>JSONPlaceholder</title></head><body><h1>JSONPlaceholder</h1><p>Free fake API for testing and prototyping.</p></body></html>',
+        content:
+          '<html><head><title>JSONPlaceholder</title></head>' +
+          '<body><h1>JSONPlaceholder</h1>' +
+          '<p>Free fake API for testing and prototyping.</p>' +
+          '</body></html>',
       },
     ],
     skipDuplicates: true,

@@ -37,7 +37,8 @@ echo ""
 echo "🛠️  Checking database schema..."
 
 # Try to query a table to see if schema exists
-if npx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" &> /dev/null; then
+QUERY='SELECT COUNT(*) FROM "User";'
+if npx prisma db execute --stdin <<< "$QUERY" &> /dev/null; then
     echo "✅ Database schema is set up"
     
     # Get record counts

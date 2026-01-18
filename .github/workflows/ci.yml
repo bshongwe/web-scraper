@@ -176,7 +176,9 @@ jobs:
         run: cd scraper && poetry install
       
       - name: Lint with flake8
-        run: cd scraper && poetry run flake8 src/ || echo "No flake8 config found"
+        run: |
+          cd scraper && poetry run flake8 src/ || \
+            echo "No flake8 config found"
       
       - name: Type check with mypy
         run: cd scraper && poetry run mypy src/ || echo "No mypy config found"
@@ -236,8 +238,13 @@ jobs:
       
       - name: Wait for services to be ready
         run: |
-          timeout 120 bash -c 'until curl -f http://localhost:4000/api/jobs/results || curl -f http://localhost:4000/health; do echo "Waiting for API..."; sleep 5; done'
-          timeout 60 bash -c 'until curl -f http://localhost:3000; do echo "Waiting for frontend..."; sleep 5; done'
+          timeout 120 bash -c 'until curl -f \
+            http://localhost:4000/api/jobs/results || \
+            curl -f http://localhost:4000/health; do \
+            echo "Waiting for API..."; sleep 5; done'
+          timeout 60 bash -c 'until curl -f \
+            http://localhost:3000; do \
+            echo "Waiting for frontend..."; sleep 5; done'
       
       - name: Run integration tests
         run: |
@@ -295,7 +302,9 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -305,7 +314,9 @@ jobs:
         with:
           context: ./worker
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-worker:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-worker:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-worker:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-worker:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -315,7 +326,9 @@ jobs:
         with:
           context: ./scraper
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scraper:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scraper:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scraper:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scraper:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -325,7 +338,9 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

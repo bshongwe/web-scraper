@@ -22,7 +22,10 @@ const limiter = rateLimit({
   max: 200,
 });
 app.use(limiter);
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+  credentials: true,
+}));
 
 app.use('/api/auth', authRouter);
 app.use('/api/jobs', jobsRouter);

@@ -40,8 +40,10 @@ jobs:
         if: matrix.component != 'scraper'
         run: |
           cd ${{ matrix.component }}
-          npm audit --audit-level=moderate || echo "Vulnerabilities found - see above"
-          npm audit fix --dry-run || echo "Audit fix dry-run completed"
+          npm audit --audit-level=moderate || \
+            echo "Vulnerabilities found - see above"
+          npm audit fix --dry-run || \
+            echo "Audit fix dry-run completed"
         continue-on-error: true
       
       - name: Audit Python dependencies
@@ -49,10 +51,13 @@ jobs:
         run: |
           cd scraper
           poetry install || echo "Poetry install failed"
-          poetry show --outdated || echo "No outdated packages info available"
+          poetry show --outdated || \
+            echo "No outdated packages info available"
           pip install safety || echo "Safety install failed"
-          poetry export -f requirements.txt --output requirements.txt || echo "Export failed"
-          safety check -r requirements.txt || echo "Safety check completed"
+          poetry export -f requirements.txt \
+            --output requirements.txt || echo "Export failed"
+          safety check -r requirements.txt || \
+            echo "Safety check completed"
         continue-on-error: true
       
       - name: Run Snyk security scan
@@ -61,7 +66,9 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --file=${{ matrix.component }}/package.json
+          args: >-
+            --severity-threshold=high
+            --file=${{ matrix.component }}/package.json
         continue-on-error: true
 
   docker-security:
@@ -77,9 +84,11 @@ jobs:
         run: |
           for image in api worker scraper frontend; do
             echo "Scanning web-scraper-$image image..."
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
               -v $HOME/Library/Caches:/root/.cache/ \
-              aquasec/trivy:latest image --exit-code 1 --severity HIGH,CRITICAL \
+              aquasec/trivy:latest image --exit-code 1 \
+              --severity HIGH,CRITICAL \
               web-scraper-$image:latest || true
           done
 

@@ -32,7 +32,8 @@ async function exploreDatabase() {
       });
 
       users.forEach(user => {
-        console.log(`   📧 ${user.email} (${user.role}) - ${user._count.sessions} sessions`);
+        const sessionInfo = `${user._count.sessions} sessions`;
+        console.log(`   📧 ${user.email} (${user.role}) - ${sessionInfo}`);
       });
       console.log('');
     }
@@ -53,10 +54,14 @@ async function exploreDatabase() {
 
       results.forEach(result => {
         const contentLength = result.content.length;
-        const truncatedUrl = result.url.length > 50 ? result.url.substring(0, 47) + '...' : result.url;
+        const truncatedUrl = result.url.length > 50
+          ? result.url.substring(0, 47) + '...'
+          : result.url;
         console.log(`   🔗 ${truncatedUrl}`);
-        console.log(`      📊 Content: ${contentLength.toLocaleString()} characters`);
-        console.log(`      📅 Scraped: ${result.createdAt.toLocaleString()}\n`);
+        const contentInfo = `${contentLength.toLocaleString()} characters`;
+        console.log(`      � Content: ${contentInfo}`);
+        const scrapedInfo = result.createdAt.toLocaleString();
+        console.log(`      📅 Scraped: ${scrapedInfo}\n`);
       });
     }
 
@@ -76,7 +81,9 @@ async function exploreDatabase() {
 
       if (activeSessions.length > 0) {
         activeSessions.forEach(session => {
-          console.log(`   👤 ${session.user.email} - Created: ${session.createdAt.toLocaleString()}`);
+          console.log(`   👤 ${session.user.email}`);
+          const createdInfo = session.createdAt.toLocaleString();
+          console.log(`      Created: ${createdInfo}`);
         });
       } else {
         console.log('   No active sessions found');

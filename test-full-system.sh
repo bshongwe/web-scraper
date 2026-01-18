@@ -39,7 +39,8 @@ if echo "$REGISTER_RESULT" | grep -q "id"; then
         echo "   ✅ User login works"
         
         # Extract access token for job scheduling test
-        ACCESS_TOKEN=$(echo "$LOGIN_RESULT" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+        ACCESS_TOKEN=$(echo "$LOGIN_RESULT" | \
+          grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
         
         # Test Job Scheduling
         echo "5. Testing Job Scheduling..."
@@ -54,7 +55,9 @@ if echo "$REGISTER_RESULT" | grep -q "id"; then
             sleep 3
             
             # Check if results increased
-            RESULT_COUNT=$(curl -s http://localhost:4000/api/jobs/results | jq length 2>/dev/null || echo "0")
+            RESULT_COUNT=$(curl -s \
+              http://localhost:4000/api/jobs/results | \
+              jq length 2>/dev/null || echo "0")
             echo "   📊 Current scrape results count: $RESULT_COUNT"
         else
             echo "   ❌ Job scheduling failed"
@@ -72,7 +75,8 @@ echo ""
 echo "🌐 Access Points:"
 echo "   Frontend: http://localhost:3000"
 echo "   API: http://localhost:4000"
-echo "   Prisma Studio: http://localhost:5555 (run: docker exec web-scraper-api-1 npx prisma studio)"
+echo "   Prisma Studio: http://localhost:5555"
+echo "   (run: docker exec web-scraper-api-1 npx prisma studio)"
 echo ""
 echo "🐳 Container Status:"
 docker compose ps

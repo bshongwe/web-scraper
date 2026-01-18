@@ -18,7 +18,8 @@ fi
 if [ ! -f backend/.env ]; then
     echo "📝 Creating backend/.env from template..."
     cp backend/.env.example backend/.env
-    echo "✅ Please edit backend/.env with your configuration before proceeding."
+    echo "✅ Please edit backend/.env with your configuration"
+    echo "   before proceeding."
 else
     echo "✅ backend/.env already exists"
 fi
@@ -44,8 +45,10 @@ if docker-compose ps | grep -q "Up"; then
     echo "   Stop all:     docker-compose down"
     echo "   Rebuild:      docker-compose up --build"
     echo ""
-    echo "🎉 Setup complete! Visit http://localhost:3000 to start using the scraper."
+    echo "🎉 Setup complete! Visit http://localhost:3000"
+    echo "   to start using the scraper."
 else
-    echo "❌ Some services failed to start. Check logs with: docker-compose logs"
+    echo "❌ Some services failed to start."
+    echo "   Check logs with: docker-compose logs"
     exit 1
 fi

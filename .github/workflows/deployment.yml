@@ -35,15 +35,19 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
-            echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "version=${{ github.event.release.tag_name }}" \
+              >> $GITHUB_OUTPUT
           else
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "version=${{ github.event.inputs.version }}" \
+              >> $GITHUB_OUTPUT
           fi
       
       - name: Validate deployment
         run: |
-          echo "🔍 Validating deployment for version: ${{ steps.version.outputs.version }}"
-          echo "🎯 Target environment: ${{ github.event.inputs.environment || 'production' }}"
+          echo "🔍 Validating deployment for version:" \
+            "${{ steps.version.outputs.version }}"
+          echo "🎯 Target environment:" \
+            "${{ github.event.inputs.environment || 'production' }}"
       
       - name: Check image availability
         run: |
@@ -135,13 +139,16 @@ jobs:
           
           echo "🚀 Deploying $SERVICE:$VERSION to $ENV"
           
-          # Example deployment commands (adjust for your infrastructure)
+          # Example deployment commands (adjust for your infra)
           # For Kubernetes:
-          # kubectl set image deployment/$SERVICE-deployment $SERVICE=$REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION
+          # kubectl set image deployment/$SERVICE-deployment \
+          #   $SERVICE=$REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION
           # kubectl rollout status deployment/$SERVICE-deployment
           
           # For Docker Swarm:
-          # docker service update --image $REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION web-scraper_$SERVICE
+          # docker service update --image \
+          #   $REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION \
+          #   web-scraper_$SERVICE
           
           # For docker-compose with rolling update:
           # docker pull $REGISTRY/$IMAGE_NAME-$SERVICE:$VERSION
@@ -162,26 +169,38 @@ jobs:
           ENV="${{ github.event.inputs.environment || 'production' }}"
           
           if [ "$ENV" = "production" ]; then
-            API_URL="${{ secrets.PRODUCTION_API_URL || 'http://localhost:4000' }}"
-            FRONTEND_URL="${{ secrets.PRODUCTION_FRONTEND_URL || 'http://localhost:3000' }}"
+            API_URL="${{ secrets.PRODUCTION_API_URL }}"
+            API_URL="${API_URL:-http://localhost:4000}"
+            FRONTEND_URL="${{ secrets.PRODUCTION_FRONTEND_URL }}"
+            FRONTEND_URL="${FRONTEND_URL:-http://localhost:3000}"
           else
-            API_URL="${{ secrets.STAGING_API_URL || 'http://localhost:4000' }}"
-            FRONTEND_URL="${{ secrets.STAGING_FRONTEND_URL || 'http://localhost:3000' }}"
+            API_URL="${{ secrets.STAGING_API_URL }}"
+            API_URL="${API_URL:-http://localhost:4000}"
+            FRONTEND_URL="${{ secrets.STAGING_FRONTEND_URL }}"
+            FRONTEND_URL="${FRONTEND_URL:-http://localhost:3000}"
           fi
           
           # Skip health check if URLs are not configured
           if [ -z "$API_URL" ] || [ "$API_URL" = "" ]; then
-            echo "⚠️  API_URL not configured, skipping API health check"
+            echo "⚠️  API_URL not configured," \
+              "skipping API health check"
           else
             echo "🔍 Checking API health: $API_URL"
-            timeout 300 bash -c "until curl -f $API_URL/api/jobs/results; do echo 'Waiting for API...'; sleep 10; done" || echo "⚠️  API health check timed out"
+            timeout 300 bash -c "until curl -f \
+              $API_URL/api/jobs/results; do \
+              echo 'Waiting for API...'; sleep 10; done" || \
+              echo "⚠️  API health check timed out"
           fi
           
           if [ -z "$FRONTEND_URL" ] || [ "$FRONTEND_URL" = "" ]; then
-            echo "⚠️  FRONTEND_URL not configured, skipping Frontend health check"
+            echo "⚠️  FRONTEND_URL not configured," \
+              "skipping Frontend health check"
           else
             echo "🔍 Checking Frontend health: $FRONTEND_URL"
-            timeout 300 bash -c "until curl -f $FRONTEND_URL; do echo 'Waiting for Frontend...'; sleep 10; done" || echo "⚠️  Frontend health check timed out"
+            timeout 300 bash -c "until curl -f \
+              $FRONTEND_URL; do \
+              echo 'Waiting for Frontend...'; sleep 10; done" || \
+              echo "⚠️  Frontend health check timed out"
           fi
       
       - name: Run smoke tests
@@ -189,9 +208,11 @@ jobs:
           ENV="${{ github.event.inputs.environment || 'production' }}"
           
           if [ "$ENV" = "production" ]; then
-            API_URL="${{ secrets.PRODUCTION_API_URL || 'http://localhost:4000' }}"
+            API_URL="${{ secrets.PRODUCTION_API_URL }}"
+            API_URL="${API_URL:-http://localhost:4000}"
           else
-            API_URL="${{ secrets.STAGING_API_URL || 'http://localhost:4000' }}"
+            API_URL="${{ secrets.STAGING_API_URL }}"
+            API_URL="${API_URL:-http://localhost:4000}"
           fi
           
           # Skip smoke tests if API URL is not configured
@@ -204,20 +225,24 @@ jobs:
           
           # Test job results endpoint (non-authenticated)
           echo "Testing job results endpoint..."
-          RESULTS=$(curl -s -w "%{http_code}" $API_URL/api/jobs/results || echo "000")
+          RESULTS=$(curl -s -w "%{http_code}" \
+            $API_URL/api/jobs/results || echo "000")
           if echo "$RESULTS" | grep -q "200\|\[\]"; then
             echo "✅ Job results endpoint smoke test passed"
           else
-            echo "⚠️  Job results endpoint returned: $RESULTS (may require authentication)"
+            echo "⚠️  Job results endpoint returned: $RESULTS" \
+              "(may require authentication)"
           fi
           
           # Test basic API health
           echo "Testing API health endpoint..."
-          HEALTH=$(curl -s -w "%{http_code}" $API_URL/health 2>/dev/null || echo "000")
+          HEALTH=$(curl -s -w "%{http_code}" $API_URL/health \
+            2>/dev/null || echo "000")
           if echo "$HEALTH" | grep -q "200"; then
             echo "✅ API health check passed"
           else
-            echo "⚠️  API health endpoint not available or returned: $HEALTH"
+            echo "⚠️  API health endpoint not available" \
+              "or returned: $HEALTH"
           fi
         continue-on-error: true
 

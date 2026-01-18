@@ -34,12 +34,17 @@ jobs:
         run: |
           docker compose up -d
           sleep 30
-          timeout 60 bash -c 'until curl -f http://localhost:4000/api/jobs/results; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f \
+            http://localhost:4000/api/jobs/results; do \
+            sleep 2; done'
       
       - name: Install k6
         run: |
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-key adv --keyserver \
+            hkp://keyserver.ubuntu.com:80 --recv-keys \
+            C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | \
+            sudo tee /etc/apt/sources.list.d/k6.list
           sudo apt-get update
           sudo apt-get install k6
       
@@ -58,8 +63,8 @@ jobs:
               { duration: '10s', target: 0 },    // Ramp down
             ],
             thresholds: {
-              http_req_duration: ['p(95)<5000'], // 95% of requests under 5s
-              http_req_failed: ['rate<0.95'],    // Allow 95% failure rate for CI
+              http_req_duration: ['p(95)<5000'], // 95% under 5s
+              http_req_failed: ['rate<0.95'], // 95% failure for CI
             },
           };
           
@@ -74,8 +79,12 @@ jobs:
             // Only test registration occasionally to avoid spam
             if (Math.random() < 0.1) {
               let email = `test-${Date.now()}-${Math.random()}@example.com`;
-              let registerResponse = http.post('http://localhost:4000/api/auth/register', 
-                JSON.stringify({ email: email, password: 'testpass123' }),
+              let registerResponse = http.post(
+                'http://localhost:4000/api/auth/register', 
+                JSON.stringify({
+                  email: email,
+                  password: 'testpass123'
+                }),
                 { headers: { 'Content-Type': 'application/json' } }
               );
               
@@ -89,7 +98,9 @@ jobs:
           EOF
       
       - name: Run performance tests
-        run: k6 run performance-test.js || echo "Performance test completed with issues - continuing"
+        run: |
+          k6 run performance-test.js || \
+            echo "Performance test completed with issues - continuing"
         continue-on-error: true
       
       - name: Collect logs on failure

@@ -16,9 +16,11 @@
 -- 5. Count records in each table
 SELECT 'Users' as table_name, COUNT(*) as record_count FROM "User"
 UNION ALL
-SELECT 'Sessions' as table_name, COUNT(*) as record_count FROM "Session"  
+SELECT 'Sessions' as table_name, COUNT(*) as record_count
+FROM "Session"  
 UNION ALL
-SELECT 'ScrapeResults' as table_name, COUNT(*) as record_count FROM "ScrapeResult";
+SELECT 'ScrapeResults' as table_name, COUNT(*) as record_count
+FROM "ScrapeResult";
 
 -- 6. View all users with their session counts
 SELECT 
